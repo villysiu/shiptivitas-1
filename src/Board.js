@@ -1,6 +1,6 @@
 import React from 'react';
-import Dragula from 'dragula';
 import 'dragula/dist/dragula.css';
+import Dragula from 'react-dragula';
 import Swimlane from './Swimlane';
 import './Board.css';
 
@@ -54,6 +54,31 @@ export default class Board extends React.Component {
     return (
       <Swimlane name={name} clients={clients} dragulaRef={ref}/>
     );
+  }
+  
+  componentDidMount() {
+
+   const containers = [this.swimlanes.backlog.current, this.swimlanes.inProgress.current, this.swimlanes.complete.current]
+   console.log(containers)
+   const options = {
+    
+   }
+   Dragula(containers, options)
+   .on('drop', (el, target, source) => {
+    // Handle the drop event
+    // console.log('Dropped element:', el);
+    // console.log('Target container:', target);
+    // console.log('Source container:', source);
+    
+    if(target.id === "Backlog")
+      el.className = "Card Card-grey"
+    else if(target.id === "In Progress")
+      el.className = "Card Card-blue"
+    else 
+      el.className = "Card Card-green"
+
+  });
+
   }
 
   render() {
