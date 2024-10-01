@@ -1,0 +1,59 @@
+diff --git a/src/Board.js b/src/Board.js
+index 1f00045..3a7c62b 100644
+--- a/src/Board.js
++++ b/src/Board.js
+@@ -1,6 +1,6 @@
+ import React from 'react';
+-import Dragula from 'dragula';
+ import 'dragula/dist/dragula.css';
++import Dragula from 'react-dragula';
+ import Swimlane from './Swimlane';
+ import './Board.css';
+ 
+@@ -55,6 +55,31 @@ export default class Board extends React.Component {
+       <Swimlane name={name} clients={clients} dragulaRef={ref}/>
+     );
+   }
++  
++  componentDidMount() {
++
++   const containers = [this.swimlanes.backlog.current, this.swimlanes.inProgress.current, this.swimlanes.complete.current]
++   console.log(containers)
++   const options = {
++    
++   }
++   Dragula(containers, options)
++   .on('drop', (el, target, source) => {
++    // Handle the drop event
++    // console.log('Dropped element:', el);
++    // console.log('Target container:', target);
++    // console.log('Source container:', source);
++    
++    if(target.id === "Backlog")
++      el.className = "Card Card-grey"
++    else if(target.id === "In Progress")
++      el.className = "Card Card-blue"
++    else 
++      el.className = "Card Card-green"
++
++  });
++
++  }
+ 
+   render() {
+     return (
+diff --git a/src/Swimlane.js b/src/Swimlane.js
+index 7e6e0d0..4a867a9 100644
+--- a/src/Swimlane.js
++++ b/src/Swimlane.js
+@@ -18,7 +18,9 @@ export default class Swimlane extends React.Component {
+     return (
+       <div className="Swimlane-column">
+         <div className="Swimlane-title">{this.props.name}</div>
+-        <div className="Swimlane-dragColumn" ref={this.props.dragulaRef}>
++        <div className="Swimlane-dragColumn" ref={this.props.dragulaRef}
++          id={this.props.name}
++        >
+           {cards}
+         </div>
+       </div>);

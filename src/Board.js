@@ -1,27 +1,12 @@
-import React from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import 'dragula/dist/dragula.css';
 import Dragula from 'react-dragula';
 import Swimlane from './Swimlane';
 import './Board.css';
 
-export default class Board extends React.Component {
-  constructor(props) {
-    super(props);
-    const clients = this.getClients();
-    this.state = {
-      clients: {
-        backlog: clients.filter(client => !client.status || client.status === 'backlog'),
-        inProgress: clients.filter(client => client.status && client.status === 'in-progress'),
-        complete: clients.filter(client => client.status && client.status === 'complete'),
-      }
-    }
-    this.swimlanes = {
-      backlog: React.createRef(),
-      inProgress: React.createRef(),
-      complete: React.createRef(),
-    }
-  }
-  getClients() {
+const Board = () => {
+
+  const getClients = () => {
     return [
       ['1','Stark, White and Abbott','Cloned Optimal Architecture', 'in-progress'],
       ['2','Wiza LLC','Exclusive Bandwidth-Monitored Implementation', 'complete'],
@@ -50,54 +35,85 @@ export default class Board extends React.Component {
       status: companyDetails[3],
     }));
   }
-  renderSwimlane(name, clients, ref) {
+  
+    const clients = getClients();
+    const [backlog, setBacklog] = useState(clients.filter(client => !client.status || client.status === 'backlog'))
+    const [inProgress, setInProgress] = useState(clients.filter(client => client.status && client.status === 'in-progress'))
+    const [complete, setComplete] = useState(clients.filter(client => client.status && client.status === 'complete'))
+     
+    const backlogRef = useRef()
+    const inProgressRef = useRef()
+    const completeRef = useRef()
+  
+    
+  const renderSwimlane = (name, clients, ref) => {
     return (
       <Swimlane name={name} clients={clients} dragulaRef={ref}/>
     );
   }
   
-  componentDidMount() {
+  useEffect(() => {
 
-   const containers = [this.swimlanes.backlog.current, this.swimlanes.inProgress.current, this.swimlanes.complete.current]
-   console.log(containers)
-   const options = {
+    const containers = [backlogRef.current, inProgressRef.current, completeRef.current]
+    const drake = Dragula(containers, {})
+
     
-   }
-   Dragula(containers, options)
-   .on('drop', (el, target, source) => {
-    // Handle the drop event
-    // console.log('Dropped element:', el);
-    // console.log('Target container:', target);
-    // console.log('Source container:', source);
-    
-    if(target.id === "Backlog")
-      el.className = "Card Card-grey"
-    else if(target.id === "In Progress")
-      el.className = "Card Card-blue"
-    else 
-      el.className = "Card Card-green"
+    drake.on('drop', (el, target, source, sibling) => {
+      drake.cancel(true); 
 
-  });
 
-  }
+      let targetSwimlane = ""
+      if(target === inProgressRef.current)
+        targetSwimlane = 'in-progress'
+      else if(target === completeRef.current)
+        targetSwimlane = 'complete'
+      else
+        targetSwimlane = 'backlog'
 
-  render() {
+  
+      const clientsList = [
+        ...backlog, ...inProgress, ...complete
+      ]
+
+      const movedClient = clientsList.find(c=> c.id === el.dataset.id)
+      const movedClientClone = {
+        ...movedClient,
+        status: targetSwimlane
+      }
+      console.log(movedClientClone)
+      let updatedClientsList = clientsList.filter(c=>c.id !== movedClientClone.id)
+      const sibIdx = updatedClientsList.findIndex(c=> sibling && c.id === sibling.dataset.id)
+      sibIdx = sibIdx === -1 ? updatedClientsList.legnth : sibIdx
+      updatedClientsList = [...updatedClientsList.slice(0, sibIdx), movedClientClone, ...updatedClientsList.slice(sibIdx)]
+
+      console.log(updatedClientsList)
+      setInProgress(updatedClientsList.filter(c => c.status && c.status === 'in-progress'))
+      setComplete(updatedClientsList.filter(c => c.status && c.status === 'complete'))
+      setBacklog(updatedClientsList.filter(c => c.status && c.status === 'backlog'))
+    })
+      
+  }, [backlog, inProgress, complete])
+
+  
+
+
     return (
       <div className="Board">
         <div className="container-fluid">
           <div className="row">
             <div className="col-md-4">
-              {this.renderSwimlane('Backlog', this.state.clients.backlog, this.swimlanes.backlog)}
+              {renderSwimlane('Backlog', backlog, backlogRef)}
             </div>
             <div className="col-md-4">
-              {this.renderSwimlane('In Progress', this.state.clients.inProgress, this.swimlanes.inProgress)}
+              {renderSwimlane('In Progress', inProgress, inProgressRef)}
             </div>
             <div className="col-md-4">
-              {this.renderSwimlane('Complete', this.state.clients.complete, this.swimlanes.complete)}
+              {renderSwimlane('Complete', complete, completeRef)}
             </div>
           </div>
         </div>
       </div>
     );
-  }
+  
 }
+export default Board
